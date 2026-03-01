@@ -162,32 +162,28 @@ export default function RecitationInterface({
                 />
               </div>
 
-              {/* Recording Button - Only for Audio mode */}
-              {mode === "audio" && (
-                <>
-                  <button
-                    onClick={isRecording ? stopRecording : startRecording}
-                    disabled={!isConnected}
-                    className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto transition-all ${
-                      isRecording
-                        ? "bg-red-500 hover:bg-red-600 recording-pulse"
-                        : "bg-emerald-600 hover:bg-emerald-700"
-                    } disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl`}
-                  >
-                    {isRecording ? (
-                      <MicOff className="h-12 w-12 text-white" />
-                    ) : (
-                      <Mic className="h-12 w-12 text-white" />
-                    )}
-                  </button>
+              {/* Recording Button */}
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={!isConnected}
+                className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto transition-all ${
+                  isRecording
+                    ? "bg-red-500 hover:bg-red-600 recording-pulse"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                } disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl`}
+              >
+                {isRecording ? (
+                  <MicOff className="h-12 w-12 text-white" />
+                ) : (
+                  <Mic className="h-12 w-12 text-white" />
+                )}
+              </button>
 
-                  <p className="mt-4 text-gray-600">
-                    {isRecording
-                      ? "Click to stop recording"
-                      : "Click to start recording"}
-                  </p>
-                </>
-              )}
+              <p className="mt-4 text-gray-600">
+                {isRecording
+                  ? "Click to stop recording"
+                  : "Click to start recording"}
+              </p>
             </div>
           </div>
         </div>
