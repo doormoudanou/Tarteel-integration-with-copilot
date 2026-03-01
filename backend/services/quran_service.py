@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 import json
 import os
 import requests
@@ -6,203 +6,174 @@ from pathlib import Path
 
 class QuranService:
     """
-    Service for accessing Quran text with tashkeel
-    Fetches from Quran.com API and caches locally
+    Service for accessing complete Quran text with tashkeel
+    Uses Quran.cloud API as primary source, with local caching
     """
 
     def __init__(self):
         self.cache_dir = Path(__file__).parent.parent / "cache"
         self.cache_dir.mkdir(exist_ok=True)
 
-        self.quran_data = self._load_quran_data()
-        self.surah_info = self._load_surah_info()
+        self.surah_info = self._load_or_fetch_surah_info()
+        self.quran_data = self._load_or_fetch_quran_data()
 
-        # Load from API if cache is empty
-        if not self.quran_data or not self.surah_info:
-            self._fetch_from_api()
-
-    def _load_quran_data(self) -> Dict:
-        """Load Quran text data from cache or use fallback"""
-        cache_file = self.cache_dir / "quran_data.json"
-
-        if cache_file.exists():
-            try:
-                with open(cache_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"Error loading cache: {e}")
-
-        # Fallback data with more surahs
-        return self._get_fallback_quran_data()
-
-    def _get_fallback_quran_data(self) -> Dict:
-        """Comprehensive fallback Quran data"""
-        return {
-            "1": {  # Surah Al-Fatihah
-                "1": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                "2": "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-                "3": "الرَّحْمَٰنِ الرَّحِيمِ",
-                "4": "مَالِكِ يَوْمِ الدِّينِ",
-                "5": "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
-                "6": "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-                "7": "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ"
-            },
-            "2": {  # Al-Baqarah
-                "1": "الم",
-                "2": "ذَٰلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ هُدًى لِّلْمُتَّقِينَ",
-                "3": "الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنفِقُونَ",
-                "4": "وَالَّذِينَ يُؤْمِنُونَ بِمَا أُنزِلَ إِلَيْكَ وَمَا أُنزِلَ مِن قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوقِنُونَ",
-                "5": "أُولَٰئِكَ عَلَىٰ هُدًى مِّن رَّبِّهِمْ وَأُولَٰئِكَ هُمُ الْمُفْلِحُونَ"
-            },
-            "112": {  # Al-Ikhlas
-                "1": "قُلْ هُوَ اللَّهُ أَحَدٌ",
-                "2": "اللَّهُ الصَّمَدُ",
-                "3": "لَمْ يَلِدْ وَلَمْ يُولَدْ",
-                "4": "وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ"
-            },
-            "113": {  # Al-Falaq
-                "1": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ",
-                "2": "مِن شَرِّ مَا خَلَقَ",
-                "3": "وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ",
-                "4": "وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ",
-                "5": "وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ"
-            },
-            "114": {  # An-Nas
-                "1": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
-                "2": "مَلِكِ النَّاسِ",
-                "3": "إِلَٰهِ النَّاسِ",
-                "4": "مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ",
-                "5": "الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ",
-                "6": "مِنَ الْجِنَّةِ وَالنَّاسِ"
-            }
-        }
-
-    def _load_surah_info(self) -> Dict:
-        """Load Surah metadata"""
+    def _load_or_fetch_surah_info(self) -> Dict:
+        """Load surah info from cache or fetch from API"""
         cache_file = self.cache_dir / "surah_info.json"
 
         if cache_file.exists():
             try:
                 with open(cache_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    print(f"✅ Loaded {len(data)} surahs from cache")
+                    return data
             except Exception as e:
-                print(f"Error loading surah info cache: {e}")
+                print(f"⚠️  Cache read error: {e}")
 
-        return self._get_fallback_surah_info()
-
-    def _get_fallback_surah_info(self) -> Dict:
-        """Comprehensive surah metadata"""
-        return {
-            "1": {
-                "number": 1,
-                "name": "الفاتحة",
-                "englishName": "Al-Fatihah",
-                "englishNameTranslation": "The Opening",
-                "revelationType": "Meccan",
-                "numberOfAyahs": 7
-            },
-            "2": {
-                "number": 2,
-                "name": "البقرة",
-                "englishName": "Al-Baqarah",
-                "englishNameTranslation": "The Cow",
-                "revelationType": "Medinan",
-                "numberOfAyahs": 286
-            },
-            "112": {
-                "number": 112,
-                "name": "الإخلاص",
-                "englishName": "Al-Ikhlas",
-                "englishNameTranslation": "The Sincerity",
-                "revelationType": "Meccan",
-                "numberOfAyahs": 4
-            },
-            "113": {
-                "number": 113,
-                "name": "الفلق",
-                "englishName": "Al-Falaq",
-                "englishNameTranslation": "The Daybreak",
-                "revelationType": "Meccan",
-                "numberOfAyahs": 5
-            },
-            "114": {
-                "number": 114,
-                "name": "الناس",
-                "englishName": "An-Nas",
-                "englishNameTranslation": "The Mankind",
-                "revelationType": "Meccan",
-                "numberOfAyahs": 6
-            }
-        }
-
-    def _fetch_from_api(self):
-        """Fetch Quran data from external API (Quran.com or Al-Quran Cloud)"""
+        # Fetch from API
+        print("📡 Fetching surah info from Quran.cloud API...")
         try:
-            print("🌐 Fetching Quran data from API...")
-
-            # Fetch from Al-Quran Cloud API (free, no auth required)
-            base_url = "http://api.alquran.cloud/v1"
-
-            # Get all surahs metadata
-            response = requests.get(f"{base_url}/meta", timeout=10)
+            response = requests.get('http://api.alquran.cloud/v1/meta', timeout=10)
             if response.status_code == 200:
-                meta_data = response.json()
-                if meta_data.get("code") == 200:
-                    surahs = meta_data["data"]["surahs"]["references"]
+                meta = response.json()
+                if meta.get('code') == 200:
+                    surahs_data = meta['data']['surahs']['references']
 
-                    # Update surah info
-                    self.surah_info = {}
-                    for surah in surahs:
-                        self.surah_info[str(surah["number"])] = {
-                            "number": surah["number"],
-                            "name": surah["name"],
-                            "englishName": surah["englishName"],
-                            "englishNameTranslation": surah["englishNameTranslation"],
-                            "revelationType": surah["revelationType"],
-                            "numberOfAyahs": surah["numberOfAyahs"]
+                    # Convert to our format
+                    surah_info = {}
+                    for surah in surahs_data:
+                        surah_info[str(surah['number'])] = {
+                            'name': surah.get('name', ''),
+                            'englishName': surah.get('englishName', ''),
+                            'englishNameTranslation': surah.get('englishNameTranslation', ''),
+                            'revelation': surah.get('revelationType', ''),
+                            'ayahs': surah.get('numberOfAyahs', 0)
                         }
 
-                    # Save to cache
-                    self._save_cache("surah_info.json", self.surah_info)
-                    print("✅ Surah metadata fetched successfully")
+                    # Cache it
+                    try:
+                        with open(cache_file, 'w', encoding='utf-8') as f:
+                            json.dump(surah_info, f, ensure_ascii=False, indent=2)
+                        print(f"✅ Cached {len(surah_info)} surahs")
+                    except Exception as e:
+                        print(f"⚠️  Cache write error: {e}")
 
-            # For now, we'll keep the fallback data for ayahs
-            # In a production app, you'd fetch all ayahs here
-            print("💡 Using fallback ayah data. Consider downloading full Quran text.")
-
+                    return surah_info
         except Exception as e:
-            print(f"⚠️  Could not fetch from API: {e}")
-            print("Using fallback data")
+            print(f"❌ API fetch error: {e}")
 
-    def _save_cache(self, filename: str, data: Dict):
-        """Save data to cache"""
+        # Fallback
+        print("⚠️  Using fallback data...")
+        return self._get_fallback_surah_info()
+
+    def _load_or_fetch_quran_data(self) -> Dict:
+        """Load complete Quran text from cache or fetch from API"""
+        cache_file = self.cache_dir / "quran_complete.json"
+
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    total_ayahs = sum(len(ayahs) for ayahs in data.values())
+                    print(f"✅ Loaded {total_ayahs} ayahs from cache")
+                    return data
+            except Exception as e:
+                print(f"⚠️  Cache read error: {e}")
+
+        # Fetch from API - using Uthmani script with full tashkeel
+        print("📡 Fetching complete Quran with tashkeel from Quran.cloud API (may take a moment)...")
         try:
-            cache_file = self.cache_dir / filename
-            with open(cache_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            # Use quran-uthmani for full Uthmanic script with all diacritics
+            response = requests.get(
+                'http://api.alquran.cloud/v1/quran/quran-uthmani',
+                timeout=30
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('code') == 200:
+                    quran = data['data']
+
+                    # Convert to our format
+                    quran_data = {}
+                    for surah in quran['surahs']:
+                        surah_num = str(surah['number'])
+                        quran_data[surah_num] = {}
+
+                        for ayah in surah['ayahs']:
+                            ayah_num = str(ayah['numberInSurah'])
+                            quran_data[surah_num][ayah_num] = ayah['text']
+
+                    # Cache it
+                    try:
+                        with open(cache_file, 'w', encoding='utf-8') as f:
+                            json.dump(quran_data, f, ensure_ascii=False, indent=2)
+                        total_ayahs = sum(len(ayahs) for ayahs in quran_data.values())
+                        print(f"✅ Cached {total_ayahs} ayahs from {len(quran_data)} surahs")
+                    except Exception as e:
+                        print(f"⚠️  Cache write error: {e}")
+
+                    return quran_data
         except Exception as e:
-            print(f"Error saving cache: {e}")
+            print(f"❌ API fetch error: {e}")
+
+        # Fallback
+        print("⚠️  Using fallback data (limited)...")
+        return self._get_fallback_quran_data()
+
+    def _get_fallback_surah_info(self) -> Dict:
+        """Minimal fallback surah info"""
+        return {
+            str(i): {
+                'name': f'Surah {i}',
+                'englishName': f'Surah {i}',
+                'englishNameTranslation': f'Surah {i}',
+                'revelation': 'Unknown',
+                'ayahs': 7
+            }
+            for i in range(1, 115)
+        }
+
+    def _get_fallback_quran_data(self) -> Dict:
+        """Minimal fallback Quran data"""
+        return {
+            str(i): {str(j): f"Ayah {j}" for j in range(1, 8)}
+            for i in range(1, 115)
+        }
+
+    def get_all_surahs(self) -> List[Dict]:
+        """Get list of all 114 surahs"""
+        surahs = []
+        for surah_num in range(1, 115):
+            key = str(surah_num)
+            if key in self.surah_info:
+                info = self.surah_info[key].copy()
+                info['number'] = surah_num
+                surahs.append(info)
+        return surahs
 
     def get_surah(self, surah_number: int) -> Dict:
-        """Get complete surah with all ayahs"""
+        """Get surah with all ayahs"""
         surah_key = str(surah_number)
 
         if surah_key not in self.surah_info:
             return {"error": "Surah not found"}
 
         info = self.surah_info[surah_key]
-        ayahs = self.quran_data.get(surah_key, {})
+        ayahs_dict = self.quran_data.get(surah_key, {})
+
+        ayahs = [
+            {
+                "number": int(ayah_num),
+                "text": text,
+                "numberInSurah": int(ayah_num)
+            }
+            for ayah_num, text in sorted(ayahs_dict.items(), key=lambda x: int(x[0]))
+        ]
 
         return {
             "surah": info,
-            "ayahs": [
-                {
-                    "number": int(ayah_num),
-                    "text": text,
-                    "numberInSurah": int(ayah_num)
-                }
-                for ayah_num, text in ayahs.items()
-            ]
+            "ayahs": ayahs
         }
 
     def get_ayah(self, surah_number: int, ayah_number: int) -> Dict:
@@ -210,18 +181,24 @@ class QuranService:
         surah_key = str(surah_number)
         ayah_key = str(ayah_number)
 
-        if surah_key not in self.quran_data:
+        if surah_key not in self.surah_info:
             return {"error": "Surah not found"}
+
+        if surah_key not in self.quran_data:
+            return {"error": "Ayah not found"}
 
         if ayah_key not in self.quran_data[surah_key]:
             return {"error": "Ayah not found"}
+
+        surah_info = self.surah_info[surah_key]
 
         return {
             "surahNumber": surah_number,
             "ayahNumber": ayah_number,
             "text": self.quran_data[surah_key][ayah_key],
-            "surahName": self.surah_info[surah_key]["name"],
-            "surahEnglishName": self.surah_info[surah_key]["englishName"]
+            "surahName": surah_info.get("name", ""),
+            "surahEnglishName": surah_info.get("englishName", ""),
+            "totalAyahs": surah_info.get("ayahs", 1),
         }
 
     def get_ayah_text(self, surah_number: int, ayah_number: int) -> str:
@@ -233,7 +210,3 @@ class QuranService:
             return self.quran_data[surah_key][ayah_key]
 
         return ""
-
-    def get_all_surahs(self) -> List[Dict]:
-        """Get list of all surahs"""
-        return [info for info in self.surah_info.values()]

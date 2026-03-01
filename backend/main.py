@@ -1,5 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import uvicorn
 import json
 import base64
@@ -7,6 +9,7 @@ from typing import List
 from models.tarteel_model import TarteelModel
 from services.tajweed_analyzer import TajweedAnalyzer
 from services.quran_service import QuranService
+from pydantic import BaseModel
 
 app = FastAPI(title="Quran Recitation API")
 
@@ -82,6 +85,31 @@ async def get_ayah(surah_number: int, ayah_number: int):
     """Get specific ayah with tashkeel"""
     ayah_data = quran_service.get_ayah(surah_number, ayah_number)
     return ayah_data
+
+@app.get("/api/quran/audio/{surah_number}/{ayah_number}")
+async def get_quran_audio(surah_number: int, ayah_number: int, reciter: str = "ar.alafasy"):
+    """Proxy Quran audio from cdn.islamic.network to avoid CORS issues"""
+    try:
+        import requests
+
+        # Format ayah number with leading zeros
+        ayah_formatted = str(ayah_number).zfill(3)
+        url = f"https://cdn.islamic.network/quran/{reciter}/{surah_number}{ayah_formatted}.mp3"
+
+        # Fetch the audio
+        response = requests.get(url, timeout=10)
+
+        if response.status_code == 200:
+            return StreamingResponse(
+                iter([response.content]),
+                media_type="audio/mpeg",
+                headers={"Content-Disposition": f"inline; filename=quran_{surah_number}_{ayah_number}.mp3"}
+            )
+        else:
+            return {"error": f"Failed to fetch audio: {response.status_code}"}
+    except Exception as e:
+        print(f"❌ Audio proxy error: {e}")
+        return {"error": str(e)}
 
 @app.websocket("/ws/recitation")
 async def websocket_recitation(websocket: WebSocket):
@@ -182,6 +210,202 @@ async def websocket_recitation(websocket: WebSocket):
             manager.disconnect(websocket)
         except:
             pass
+
+class TashkeelRequest(BaseModel):
+    text: str
+    context: str = "quran"  # Contexte pour améliorer la précision
+
+@app.post("/api/speech/add-tashkeel")
+async def add_tashkeel_to_speech(request: TashkeelRequest):
+    """Add tashkeel (harakats) to recognized speech text and detect ayah boundaries - supports multiple consecutive ayahs"""
+    try:
+        text = request.text.strip()
+
+        if not text:
+            return {"error": "Empty text"}
+
+        # Normalize the text (remove hamza variations, etc.)
+        normalized_text = normalize_arabic_text(text)
+
+        print(f"🔍 Searching for: {text[:100]}...")
+
+        # Try to find sequential ayahs
+        best_sequence = find_ayah_sequence(normalized_text)
+
+        if best_sequence and best_sequence["confidence"] > 0.6:
+            # Found a good sequence of ayahs
+            full_text_with_tashkeel = " ".join([ayah["text"] for ayah in best_sequence["ayahs"]])
+
+            print(f"✅ Found {len(best_sequence['ayahs'])} ayahs from Surah {best_sequence['surah']}")
+
+            return {
+                "original": text,
+                "with_tashkeel": full_text_with_tashkeel,
+                "detected_ayahs": best_sequence["ayahs"],
+                "sequence_info": {
+                    "surah": best_sequence["surah"],
+                    "start_ayah": best_sequence["start_ayah"],
+                    "end_ayah": best_sequence["end_ayah"],
+                    "total_ayahs": len(best_sequence["ayahs"])
+                },
+                "confidence": best_sequence["confidence"],
+                "type": "sequence"
+            }
+
+        # Fallback: Try single ayah matching
+        single_match = find_single_ayah(normalized_text)
+
+        if single_match and single_match["confidence"] > 0.5:
+            print(f"✅ Found single ayah: Surah {single_match['surah']}, Ayah {single_match['ayah']}")
+            return {
+                "original": text,
+                "with_tashkeel": single_match["text"],
+                "detected_ayahs": [single_match],
+                "confidence": single_match["confidence"],
+                "type": "single"
+            }
+
+        # No match found
+        print(f"⚠️  No match found for text")
+        return {
+            "original": text,
+            "with_tashkeel": text,
+            "detected_ayahs": [],
+            "confidence": 0,
+            "note": "No matching ayah found in Quran database"
+        }
+
+    except Exception as e:
+        print(f"❌ Tashkeel error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
+
+def normalize_arabic_text(text: str) -> str:
+    """Normalize Arabic text for better matching"""
+    # Remove tashkeel
+    text = remove_arabic_diacritics(text)
+    # Normalize alef variations
+    text = text.replace("أ", "ا").replace("إ", "ا").replace("آ", "ا")
+    # Normalize other letters
+    text = text.replace("ى", "ي").replace("ة", "ه")
+    # Remove extra spaces
+    text = " ".join(text.split())
+    return text.strip()
+
+def find_ayah_sequence(normalized_text: str) -> dict:
+    """Find a sequence of consecutive ayahs that match the text"""
+    best_sequence = None
+    best_score = 0
+
+    # Search through all surahs
+    for surah_num in range(1, 115):
+        surah_data = quran_service.get_surah(surah_num)
+        if "ayahs" not in surah_data:
+            continue
+
+        ayahs = surah_data["ayahs"]
+
+        # Try different starting points
+        for start_idx in range(len(ayahs)):
+            # Try different lengths (1 to 10 ayahs)
+            for length in range(1, min(11, len(ayahs) - start_idx + 1)):
+                # Build concatenated text for this sequence
+                sequence_ayahs = ayahs[start_idx:start_idx + length]
+                sequence_text = " ".join([
+                    normalize_arabic_text(ayah["text"])
+                    for ayah in sequence_ayahs
+                ])
+
+                # Calculate similarity
+                similarity = calculate_text_similarity(normalized_text, sequence_text)
+
+                # Check if this is a better match
+                if similarity > best_score and similarity > 0.6:
+                    best_score = similarity
+                    best_sequence = {
+                        "surah": surah_num,
+                        "start_ayah": sequence_ayahs[0]["number"],
+                        "end_ayah": sequence_ayahs[-1]["number"],
+                        "ayahs": [
+                            {
+                                "surah": surah_num,
+                                "ayah": ayah["number"],
+                                "text": ayah["text"],
+                                "similarity": similarity
+                            }
+                            for ayah in sequence_ayahs
+                        ],
+                        "confidence": similarity
+                    }
+
+    return best_sequence
+
+def find_single_ayah(normalized_text: str) -> dict:
+    """Find a single ayah that matches the text"""
+    best_match = None
+    best_similarity = 0
+
+    for surah_num in range(1, 115):
+        surah_data = quran_service.get_surah(surah_num)
+        if "ayahs" not in surah_data:
+            continue
+
+        for ayah in surah_data["ayahs"]:
+            ayah_normalized = normalize_arabic_text(ayah["text"])
+            similarity = calculate_text_similarity(normalized_text, ayah_normalized)
+
+            if similarity > best_similarity:
+                best_similarity = similarity
+                best_match = {
+                    "surah": surah_num,
+                    "ayah": ayah["number"],
+                    "text": ayah["text"],
+                    "similarity": similarity,
+                    "confidence": similarity
+                }
+
+    return best_match
+
+def calculate_text_similarity(text1: str, text2: str) -> float:
+    """Calculate similarity between two texts using multiple methods"""
+    if not text1 or not text2:
+        return 0.0
+
+    # Method 1: Exact substring match
+    if text1 in text2 or text2 in text1:
+        shorter = min(len(text1), len(text2))
+        longer = max(len(text1), len(text2))
+        return shorter / longer
+
+    # Method 2: Word-based similarity
+    words1 = set(text1.split())
+    words2 = set(text2.split())
+
+    if not words1 or not words2:
+        return 0.0
+
+    intersection = words1.intersection(words2)
+    union = words1.union(words2)
+
+    jaccard = len(intersection) / len(union) if union else 0.0
+
+    # Method 3: Character-based similarity (for short texts)
+    if len(text1) < 50 or len(text2) < 50:
+        # Simple character overlap
+        chars1 = set(text1)
+        chars2 = set(text2)
+        char_similarity = len(chars1.intersection(chars2)) / len(chars1.union(chars2))
+        return (jaccard * 0.7 + char_similarity * 0.3)
+
+    return jaccard
+
+def remove_arabic_diacritics(text: str) -> str:
+    """Remove all Arabic diacritics (tashkeel) from text"""
+    import re
+    # Arabic diacritics Unicode range
+    arabic_diacritics = re.compile(r'[\u064B-\u0652\u0670\u0640]')
+    return arabic_diacritics.sub('', text).strip()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Volume2 } from "lucide-react";
+import { ArrowLeft, Mic, MicOff } from "lucide-react";
 import AyahDisplay from "./AyahDisplay";
 import FeedbackPanel from "./FeedbackPanel";
 import AudioVisualizer from "./AudioVisualizer";
@@ -139,7 +139,7 @@ export default function RecitationInterface({
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center">
               <h3 className="text-xl font-bold text-gray-900 mb-6">
-                {isRecording ? "Recording..." : "Ready to Recite"}
+                {isRecording ? "🎤 Recording..." : "Ready to Recite"}
               </h3>
 
               {/* Connection Status */}
@@ -162,28 +162,32 @@ export default function RecitationInterface({
                 />
               </div>
 
-              {/* Recording Button */}
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={!isConnected}
-                className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto transition-all ${
-                  isRecording
-                    ? "bg-red-500 hover:bg-red-600 recording-pulse"
-                    : "bg-emerald-600 hover:bg-emerald-700"
-                } disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl`}
-              >
-                {isRecording ? (
-                  <MicOff className="h-12 w-12 text-white" />
-                ) : (
-                  <Mic className="h-12 w-12 text-white" />
-                )}
-              </button>
+              {/* Recording Button - Only for Audio mode */}
+              {mode === "audio" && (
+                <>
+                  <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={!isConnected}
+                    className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto transition-all ${
+                      isRecording
+                        ? "bg-red-500 hover:bg-red-600 recording-pulse"
+                        : "bg-emerald-600 hover:bg-emerald-700"
+                    } disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl`}
+                  >
+                    {isRecording ? (
+                      <MicOff className="h-12 w-12 text-white" />
+                    ) : (
+                      <Mic className="h-12 w-12 text-white" />
+                    )}
+                  </button>
 
-              <p className="mt-4 text-gray-600">
-                {isRecording
-                  ? "Click to stop recording"
-                  : "Click to start recording"}
-              </p>
+                  <p className="mt-4 text-gray-600">
+                    {isRecording
+                      ? "Click to stop recording"
+                      : "Click to start recording"}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>

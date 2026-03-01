@@ -2,8 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import beautiful Arabic fonts */
-@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap");
+/* Import Quran-specific fonts with full tashkeel support */
+@import url("https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap");
+
+/* Fallback: KFGQPC Uthmanic Script (from Google Fonts alternative) */
+@font-face {
+    font-family: "Uthmanic";
+    font-style: normal;
+    font-weight: normal;
+    src:
+        local("Traditional Arabic"), local("Geeza Pro"),
+        local("Arial Unicode MS");
+}
 
 :root {
     --foreground-rgb: 0, 0, 0;
@@ -31,27 +41,43 @@ body {
     min-height: 100vh;
 }
 
-/* Enhanced Arabic text styling */
+/* Enhanced Arabic text styling with full tashkeel support */
 .arabic-text {
-    font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
+    font-family:
+        "Amiri Quran", "Noto Naskh Arabic", "Scheherazade New", "Uthmanic",
+        "Traditional Arabic", serif;
     font-size: 2rem;
-    line-height: 2.5;
+    line-height: 2.8;
     direction: rtl;
     text-align: center;
     font-weight: 400;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
+    /* Enable proper Arabic rendering */
+    font-feature-settings: "liga", "calt", "kern";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 .ayah-text {
-    font-family: "Scheherazade New", "Amiri", "Traditional Arabic", serif;
+    font-family:
+        "Amiri Quran", "Noto Naskh Arabic", "Scheherazade New", "Uthmanic",
+        "Traditional Arabic", serif;
     font-size: 2.5rem;
-    line-height: 3;
+    line-height: 3.2;
     direction: rtl;
     text-align: center;
     padding: 2rem;
     font-weight: 400;
-    letter-spacing: 0.05em;
-    word-spacing: 0.5em;
+    letter-spacing: 0.02em;
+    word-spacing: 0.3em;
+    /* Enable proper Arabic rendering with diacritics */
+    font-feature-settings: "liga", "calt", "kern", "mark";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Ensure diacritics don't get clipped */
+    overflow: visible;
 }
 
 /* Tajweed color coding */

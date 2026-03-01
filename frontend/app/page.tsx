@@ -1,5 +1,5 @@
-import Link from 'next/link'
-import { BookOpen, Mic, TrendingUp, Award } from 'lucide-react'
+import Link from "next/link";
+import { BookOpen, Mic, TrendingUp, Award, Volume2 } from "lucide-react";
 
 export default function Home() {
   return (
@@ -10,7 +10,9 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BookOpen className="h-8 w-8 text-emerald-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Quran Recitation</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Quran Recitation
+              </h1>
             </div>
             <nav className="flex gap-4">
               <Link
@@ -18,6 +20,12 @@ export default function Home() {
                 className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
               >
                 Start Reciting
+              </Link>
+              <Link
+                href="/speech-to-text"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Speech-to-Text
               </Link>
             </nav>
           </div>
@@ -63,7 +71,8 @@ export default function Home() {
               Real-time Recognition
             </h4>
             <p className="text-gray-600">
-              Advanced Arabic speech recognition using Tarteel AI models to transcribe your recitation instantly
+              Advanced Arabic speech recognition using Tarteel AI models to
+              transcribe your recitation instantly
             </p>
           </div>
 
@@ -75,7 +84,8 @@ export default function Home() {
               Tajweed Analysis
             </h4>
             <p className="text-gray-600">
-              Comprehensive Tajweed rule detection including Qalqalah, Ghunna, Madd, and more
+              Comprehensive Tajweed rule detection including Qalqalah, Ghunna,
+              Madd, and more
             </p>
           </div>
 
@@ -87,7 +97,8 @@ export default function Home() {
               Progress Tracking
             </h4>
             <p className="text-gray-600">
-              Get instant feedback with accuracy scores and detailed corrections for improvement
+              Get instant feedback with accuracy scores and detailed corrections
+              for improvement
             </p>
           </div>
         </div>
@@ -105,9 +116,12 @@ export default function Home() {
               1
             </div>
             <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">Choose a Surah</h4>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Choose a Surah
+              </h4>
               <p className="text-gray-600">
-                Select any Surah and Ayah from the Quran that you want to practice
+                Select any Surah and Ayah from the Quran that you want to
+                practice
               </p>
             </div>
           </div>
@@ -117,9 +131,12 @@ export default function Home() {
               2
             </div>
             <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">Start Reciting</h4>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Start Reciting
+              </h4>
               <p className="text-gray-600">
-                Click the microphone button and recite the Ayah with proper Tajweed
+                Click the microphone button and recite the Ayah with proper
+                Tajweed
               </p>
             </div>
           </div>
@@ -129,9 +146,12 @@ export default function Home() {
               3
             </div>
             <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">Get Instant Feedback</h4>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Get Instant Feedback
+              </h4>
               <p className="text-gray-600">
-                Receive real-time analysis of your recitation with Tajweed corrections and accuracy scores
+                Receive real-time analysis of your recitation with Tajweed
+                corrections and accuracy scores
               </p>
             </div>
           </div>
@@ -141,12 +161,34 @@ export default function Home() {
               4
             </div>
             <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">Improve & Repeat</h4>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">
+                Improve & Repeat
+              </h4>
               <p className="text-gray-600">
-                Practice repeatedly with detailed suggestions until you achieve mastery
+                Practice repeatedly with detailed suggestions until you achieve
+                mastery
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Speech-to-Text CTA Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-3xl p-12 text-white text-center max-w-3xl mx-auto">
+          <Volume2 className="h-16 w-16 mx-auto mb-6 text-indigo-100" />
+          <h3 className="text-3xl font-bold mb-4">Try Speech-to-Text</h3>
+          <p className="text-lg mb-8 text-indigo-100">
+            Practice your Arabic speech recognition. Convert your voice to text
+            in real-time with our advanced speech-to-text tool.
+          </p>
+          <Link
+            href="/speech-to-text"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-gray-100 transition shadow-lg"
+          >
+            <Volume2 className="h-6 w-6" />
+            Start Speech-to-Text Practice
+          </Link>
         </div>
       </section>
 
@@ -160,5 +202,5 @@ export default function Home() {
         </div>
       </footer>
     </main>
-  )
+  );
 }

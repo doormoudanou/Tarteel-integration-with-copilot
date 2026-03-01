@@ -1,18 +1,21 @@
-'use client'
+"use client";
+
+import AudioPlayer from "./AudioPlayer";
+import QuranAudioPlayer from "./QuranAudioPlayer";
 
 interface AyahDisplayProps {
-  surahNumber: number
-  ayahNumber: number
-  surahName: string
-  ayahText: string
-  transcription?: string
+  surahNumber: number;
+  ayahNumber: number;
+  surahName: string;
+  ayahText: string;
+  transcription?: string;
   errors?: Array<{
-    type: string
-    position: number
-    expected: string
-    received: string
-    severity: string
-  }>
+    type: string;
+    position: number;
+    expected: string;
+    received: string;
+    severity: string;
+  }>;
 }
 
 export default function AyahDisplay({
@@ -21,7 +24,7 @@ export default function AyahDisplay({
   surahName,
   ayahText,
   transcription,
-  errors = []
+  errors = [],
 }: AyahDisplayProps) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -37,11 +40,18 @@ export default function AyahDisplay({
 
       {/* Ayah Text */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3 text-center">
-          Original Ayah
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-700">Original Ayah</h3>
+          {surahNumber && ayahNumber && (
+            <QuranAudioPlayer
+              surahNumber={surahNumber}
+              ayahNumber={ayahNumber}
+              reciter="ar.alafasy"
+            />
+          )}
+        </div>
         <div className="ayah-text bg-emerald-50 rounded-xl p-6 text-emerald-900">
-          {ayahText || 'Loading...'}
+          {ayahText || "Loading..."}
         </div>
       </div>
 
@@ -68,5 +78,5 @@ export default function AyahDisplay({
         </ul>
       </div>
     </div>
-  )
+  );
 }

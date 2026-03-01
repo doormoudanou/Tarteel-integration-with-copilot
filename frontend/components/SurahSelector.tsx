@@ -1,39 +1,80 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { ChevronDown, Play } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { ChevronDown, Play } from "lucide-react";
 
 interface SurahInfo {
-  number: number
-  name: string
-  englishName: string
-  englishNameTranslation: string
-  numberOfAyahs: number
+  number: number;
+  name: string;
+  englishName: string;
+  englishNameTranslation: string;
+  numberOfAyahs: number;
 }
 
 interface SurahSelectorProps {
-  selectedSurah: number
-  selectedAyah: number
-  onSurahChange: (surah: number) => void
-  onAyahChange: (ayah: number) => void
-  onStart: () => void
+  selectedSurah: number;
+  selectedAyah: number;
+  onSurahChange: (surah: number) => void;
+  onAyahChange: (ayah: number) => void;
+  onStart: () => void;
 }
-
-const SAMPLE_SURAHS: SurahInfo[] = [
-  { number: 1, name: 'الفاتحة', englishName: 'Al-Fatihah', englishNameTranslation: 'The Opening', numberOfAyahs: 7 },
-  { number: 2, name: 'البقرة', englishName: 'Al-Baqarah', englishNameTranslation: 'The Cow', numberOfAyahs: 286 },
-  { number: 112, name: 'الإخلاص', englishName: 'Al-Ikhlas', englishNameTranslation: 'The Sincerity', numberOfAyahs: 4 },
-]
 
 export default function SurahSelector({
   selectedSurah,
   selectedAyah,
   onSurahChange,
   onAyahChange,
-  onStart
+  onStart,
 }: SurahSelectorProps) {
-  const [surahs, setSurahs] = useState<SurahInfo[]>(SAMPLE_SURAHS)
-  const currentSurah = surahs.find(s => s.number === selectedSurah)
+  const [surahs, setSurahs] = useState<SurahInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const currentSurah = surahs.find((s) => s.number === selectedSurah);
+
+  useEffect(() => {
+    // Fetch all 114 surahs from backend
+    const fetchSurahs = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/quran/surahs");
+        const data = await response.json();
+
+        if (data.surahs && Array.isArray(data.surahs)) {
+          setSurahs(data.surahs);
+          console.log(`✅ Loaded ${data.surahs.length} surahs`);
+        }
+      } catch (error) {
+        console.error("Error fetching surahs:", error);
+        // Fallback - use sample data
+        setSurahs([
+          {
+            number: 1,
+            name: "الفاتحة",
+            englishName: "Al-Fatihah",
+            englishNameTranslation: "The Opening",
+            numberOfAyahs: 7,
+          },
+          {
+            number: 2,
+            name: "البقرة",
+            englishName: "Al-Baqarah",
+            englishNameTranslation: "The Cow",
+            numberOfAyahs: 286,
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSurahs();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <p className="text-gray-600">Loading surahs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -51,14 +92,15 @@ export default function SurahSelector({
             <select
               value={selectedSurah}
               onChange={(e) => {
-                onSurahChange(Number(e.target.value))
-                onAyahChange(1)
+                onSurahChange(Number(e.target.value));
+                onAyahChange(1);
               }}
               className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none bg-white"
             >
               {surahs.map((surah) => (
                 <option key={surah.number} value={surah.number}>
-                  {surah.number}. {surah.englishName} - {surah.name} ({surah.englishNameTranslation})
+                  {surah.number}. {surah.englishName} - {surah.name} (
+                  {surah.englishNameTranslation})
                 </option>
               ))}
             </select>
@@ -77,7 +119,10 @@ export default function SurahSelector({
               onChange={(e) => onAyahChange(Number(e.target.value))}
               className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none bg-white"
             >
-              {Array.from({ length: currentSurah?.numberOfAyahs || 7 }, (_, i) => i + 1).map((num) => (
+              {Array.from(
+                { length: currentSurah?.numberOfAyahs || 7 },
+                (_, i) => i + 1,
+              ).map((num) => (
                 <option key={num} value={num}>
                   Ayah {num}
                 </option>
@@ -96,9 +141,7 @@ export default function SurahSelector({
           <p className="arabic-text text-3xl text-emerald-800">
             {currentSurah?.name}
           </p>
-          <p className="text-lg text-gray-700 mt-2">
-            Ayah {selectedAyah}
-          </p>
+          <p className="text-lg text-gray-700 mt-2">Ayah {selectedAyah}</p>
         </div>
 
         {/* Start Button */}
@@ -111,5 +154,5 @@ export default function SurahSelector({
         </button>
       </div>
     </div>
-  )
+  );
 }
