@@ -35,9 +35,7 @@ export default function RecitationInterface({
 
   const fetchAyahData = async () => {
     try {
-      const res = await fetch(
-        `http://185.245.183.209:8081/api/quran/ayah/${surahNumber}/${ayahNumber}`,
-      );
+      const res = await fetch(`/api/quran/ayah/${surahNumber}/${ayahNumber}`);
       const data = await res.json();
       setAyahText(data.text || "");
       setSurahName(data.surahEnglishName || "");
