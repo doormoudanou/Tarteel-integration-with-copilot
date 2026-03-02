@@ -14,5 +14,4 @@ python-bidi==0.4.2
 requests==2.31.0
 openai-whisper==20231117
 pyarabic==0.6.15
-difflib-fuzzy==1.0.5
 pydub==0.25.1

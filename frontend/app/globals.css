@@ -60,16 +60,11 @@ body {
 }
 
 .ayah-text {
-    font-family:
-        "Amiri Quran", "Noto Naskh Arabic", "Scheherazade New", "Uthmanic",
-        "Traditional Arabic", serif;
+    font-family: "Scheherazade New", "Amiri Quran", serif;
     font-size: 2.5rem;
-    line-height: 3.2;
-    direction: rtl;
+    line-height: 2;
     text-align: center;
-    padding: 2rem;
-    font-weight: 400;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
     word-spacing: 0.3em;
     /* Enable proper Arabic rendering with diacritics */
     font-feature-settings: "liga", "calt", "kern", "mark";
@@ -78,6 +73,33 @@ body {
     text-rendering: optimizeLegibility;
     /* Ensure diacritics don't get clipped */
     overflow: visible;
+}
+
+/* Quran Book Typography */
+.quran-book {
+    font-family: "Scheherazade New", "Amiri Quran", serif;
+    font-weight: 400;
+    font-size: 2.25rem;
+    line-height: 2.5;
+    text-align: center;
+    color: #1a3a3a;
+}
+
+.quran-book-large {
+    font-family: "Scheherazade New", "Amiri Quran", serif;
+    font-size: 3.5rem;
+    line-height: 2;
+    font-weight: 400;
+}
+
+.ayah-number {
+    display: inline-block;
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+    font-family: "Amiri Quran", serif;
+    font-weight: bold;
+    font-size: 1.5rem;
 }
 
 /* Tajweed color coding */
@@ -122,6 +144,22 @@ body {
     border-radius: 0.25rem;
     text-decoration: underline wavy red;
     animation: shake 0.5s;
+}
+
+/* Error highlighting in ayahs */
+.ayah-error {
+    background-color: rgba(239, 68, 68, 0.2);
+    text-decoration: underline wavy rgba(239, 68, 68, 0.8);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.quran-book span.bg-red-200 {
+    background-color: rgba(254, 202, 202, 0.6);
+    text-decoration: underline;
+    text-decoration-color: rgba(239, 68, 68, 0.8);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
 }
 
 /* Recording animation */

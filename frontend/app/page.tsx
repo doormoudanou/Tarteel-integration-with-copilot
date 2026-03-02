@@ -22,6 +22,12 @@ export default function Home() {
                 Start Reciting
               </Link>
               <Link
+                href="/recite-surah"
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                Recite Surah
+              </Link>
+              <Link
                 href="/speech-to-text"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >

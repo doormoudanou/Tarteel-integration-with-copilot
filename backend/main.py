@@ -14,10 +14,10 @@ from datetime import datetime
 
 app = FastAPI(title="Quran Recitation API")
 
-# CORS middleware
+# CORS middleware - Allow connections from anywhere for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["*"],  # Allow all origins for VPS access
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -219,6 +219,12 @@ class TashkeelRequest(BaseModel):
     text: str
     context: str = "quran"  # Contexte pour améliorer la précision
 
+class AnalyzeRecitationRequest(BaseModel):
+    transcript: str
+    expected_text: str
+    surah_number: int = 1
+    ayahs: List[dict] = []
+
 @app.post("/api/speech/add-tashkeel")
 async def add_tashkeel_to_speech(request: TashkeelRequest):
     """Add tashkeel (harakats) to recognized speech text and detect ayah boundaries - supports multiple consecutive ayahs"""
@@ -410,6 +416,100 @@ def remove_arabic_diacritics(text: str) -> str:
     # Arabic diacritics Unicode range
     arabic_diacritics = re.compile(r'[\u064B-\u0652\u0670\u0640]')
     return arabic_diacritics.sub('', text).strip()
+
+@app.post("/api/quran/analyze-recitation")
+async def analyze_recitation(request: AnalyzeRecitationRequest):
+    """Analyze user's Quran recitation against expected text"""
+    try:
+        transcript = request.transcript.strip()
+        expected_text = request.expected_text.strip()
+        surah_number = request.surah_number
+        ayahs = request.ayahs
+
+        if not transcript or not expected_text:
+            return {"error": "Missing transcript or expected text"}
+
+        print(f"🔍 Analyzing recitation for Surah {surah_number}")
+        print(f"Expected: {expected_text[:100]}...")
+        print(f"Got: {transcript[:100]}...")
+
+        # Normalize both texts
+        expected_norm = normalize_arabic_text(expected_text)
+        transcript_norm = normalize_arabic_text(transcript)
+
+        # Calculate similarity
+        from difflib import SequenceMatcher
+        similarity = SequenceMatcher(None, expected_norm, transcript_norm).ratio()
+        accuracy = max(0, min(1, similarity))
+
+        print(f"Accuracy: {accuracy * 100:.1f}%")
+
+        # Find errors by comparing word by word
+        expected_words = expected_norm.split()
+        transcript_words = transcript_norm.split()
+
+        errors = []
+        error_types = {"omission": 0, "substitution": 0, "insertion": 0}
+
+        # Simple word-by-word comparison
+        i, j = 0, 0
+        while i < len(expected_words) or j < len(transcript_words):
+            if i >= len(expected_words):
+                # Extra words (insertion)
+                errors.append({
+                    "type": "insertion",
+                    "expected": "",
+                    "actual": transcript_words[j] if j < len(transcript_words) else "",
+                    "word": transcript_words[j] if j < len(transcript_words) else "",
+                    "ayah_number": None
+                })
+                j += 1
+                error_types["insertion"] += 1
+            elif j >= len(transcript_words):
+                # Missing words (omission)
+                errors.append({
+                    "type": "omission",
+                    "expected": expected_words[i],
+                    "actual": "",
+                    "word": expected_words[i],
+                    "ayah_number": None
+                })
+                i += 1
+                error_types["omission"] += 1
+            elif expected_words[i] != transcript_words[j]:
+                # Different words (substitution)
+                errors.append({
+                    "type": "substitution",
+                    "expected": expected_words[i],
+                    "actual": transcript_words[j],
+                    "word": transcript_words[j],
+                    "ayah_number": None
+                })
+                i += 1
+                j += 1
+                error_types["substitution"] += 1
+            else:
+                # Match
+                i += 1
+                j += 1
+
+        print(f"✅ Found {len(errors)} errors")
+
+        return {
+            "accuracy": accuracy,
+            "transcript": transcript,
+            "expected": expected_text,
+            "errors": errors[:10],  # Limit to 10 errors to avoid clutter
+            "error_count": len(errors),
+            "error_summary": error_types,
+            "surah_number": surah_number
+        }
+
+    except Exception as e:
+        print(f"❌ Analysis error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
