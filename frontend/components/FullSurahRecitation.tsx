@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { ArrowLeft, X, Mic, MicOff } from "lucide-react";
+import { ArrowLeft, X, Mic, MicOff, AlertCircle } from "lucide-react";
 
 interface Props {
   surahNumber: number;
@@ -229,35 +229,42 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
   /* ── Loading state ─────────────────────────────── */
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-sky-50">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600" />
+          <p className="mt-4 text-sm font-medium text-gray-600">
+            Loading Surah...
+          </p>
+        </div>
       </div>
     );
   }
 
   /* ── Main render ───────────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50/30 to-sky-50/30">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-gray-200/60 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
+      <header className="sticky top-0 z-30 border-b border-gray-200/60 bg-white/95 backdrop-blur-md shadow-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <button
             onClick={onBack}
-            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="text-center min-w-0">
-            <h1 className="truncate text-sm font-bold sm:text-lg">
+          <div className="text-center min-w-0 flex-1">
+            <h1 className="truncate text-base font-bold text-gray-900 sm:text-xl">
               {surahName}
             </h1>
-            <p className="text-xs text-gray-500">Surah {surahNumber}</p>
+            <p className="text-xs text-gray-500 sm:text-sm">
+              Surah {surahNumber}
+            </p>
           </div>
-          <div className="w-12 sm:w-16 flex justify-end">
+          <div className="w-16 sm:w-20 flex justify-end">
             {isListening && (
-              <span className="flex items-center gap-1 text-xs font-medium text-red-600">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />{" "}
+              <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                 REC
               </span>
             )}
@@ -266,25 +273,34 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
       </header>
 
       {/* Body */}
-      <main className="flex-1 mx-auto w-full max-w-4xl px-3 pt-4 pb-44 sm:px-6 sm:pt-8">
+      <main className="flex-1 mx-auto w-full max-w-4xl px-4 pt-6 pb-36 sm:px-6 sm:pt-8 md:pb-32">
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700">
-            {error}
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm animate-in slide-in-from-top-2">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
+            <p className="text-sm font-medium text-red-700 leading-relaxed">
+              {error}
+            </p>
           </div>
         )}
 
-        {/* ── Quran text ────────────────────────────── */}
-        <div className="rounded-2xl border-2 border-amber-200/80 bg-gradient-to-b from-amber-50/80 to-white p-4 shadow-lg sm:p-8 lg:p-10">
+        {/* ── Quran text card ────────────────────────────── */}
+        <div className="relative rounded-3xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 via-white to-amber-50/40 p-5 shadow-xl sm:p-8 lg:p-12 transition-all hover:shadow-2xl">
+          {/* Decorative corner accents */}
+          <div className="absolute top-0 left-0 h-20 w-20 border-l-2 border-t-2 border-emerald-200 rounded-tl-3xl opacity-30" />
+          <div className="absolute bottom-0 right-0 h-20 w-20 border-r-2 border-b-2 border-emerald-200 rounded-br-3xl opacity-30" />
+
           {surahNumber !== 9 && (
-            <p
-              className="mb-4 border-b border-amber-200 pb-4 text-center text-xl font-semibold text-emerald-800 sm:mb-6 sm:pb-6 sm:text-3xl"
-              dir="rtl"
-            >
-              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-            </p>
+            <div className="mb-6 sm:mb-8">
+              <p
+                className="border-b-2 border-amber-200/60 pb-5 text-center text-2xl font-bold text-emerald-800 sm:pb-6 sm:text-4xl leading-relaxed"
+                dir="rtl"
+              >
+                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              </p>
+            </div>
           )}
 
-          <div className="quran-page" dir="rtl">
+          <div className="quran-page relative" dir="rtl">
             {displayAyahs.map((ayah, i) => (
               <span key={ayah.number}>
                 <span
@@ -292,7 +308,7 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
                     __html: highlight(ayah.text, ayah.number),
                   }}
                 />
-                <span className="mx-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-800 align-middle sm:mx-1.5 sm:h-6 sm:w-6 sm:text-xs">
+                <span className="mx-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 text-xs font-bold text-emerald-800 align-middle ring-1 ring-emerald-200/50 sm:mx-2 sm:h-7 sm:w-7 transition-transform hover:scale-110">
                   {ayah.number}
                 </span>
                 {i < displayAyahs.length - 1 && " "}
@@ -300,106 +316,138 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
             ))}
           </div>
         </div>
+      </main>
 
-        {/* ── Controls ──────────────────────────────── */}
-        <div className="mt-8 flex flex-col items-center gap-4 sm:gap-5">
-          <button
-            onClick={isListening ? stop : start}
-            className={`flex h-20 w-20 items-center justify-center rounded-full shadow-xl transition-all active:scale-95 sm:h-28 sm:w-28 ${
-              isListening
-                ? "bg-red-500 text-white recording-pulse"
-                : "bg-emerald-600 text-white hover:bg-emerald-700"
-            }`}
-          >
-            {isListening ? (
-              <MicOff className="h-9 w-9 sm:h-12 sm:w-12" />
-            ) : (
-              <Mic className="h-9 w-9 sm:h-12 sm:w-12" />
-            )}
-          </button>
-
-          <p className="text-xs font-medium text-gray-500 sm:text-sm">
-            {isListening
-              ? "🎤 Listening… tap to stop"
-              : transcript
-                ? "✅ Done — review below"
-                : "Tap mic to recite"}
-          </p>
-
-          {transcript && (
-            <div className="w-full max-w-lg rounded-xl border border-sky-200 bg-sky-50 p-4 sm:p-5">
-              <p className="mb-1 text-xs font-semibold text-sky-800">
-                Your recitation
-              </p>
-              <p className="mb-4 text-sm leading-relaxed text-gray-800 line-clamp-4 sm:line-clamp-none">
-                {transcript}
-              </p>
-              <button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing}
-                className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {isAnalyzing ? "Analysing…" : "📋 See Review"}
-              </button>
+      {/* ── Floating mic controls (sticky bottom) ──────────── */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200/60 bg-white/98 backdrop-blur-xl shadow-[0_-8px_32px_rgba(0,0,0,0.08)]">
+        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-5">
+          {/* Transcript preview — compact 2-line clamp when done recording */}
+          {transcript && !showReview && (
+            <div className="mb-3 rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-sky-100/50 px-4 py-2.5 shadow-sm animate-in slide-in-from-bottom-2">
+              <div className="flex items-start gap-2">
+                <span className="text-xs font-semibold text-sky-700 shrink-0">
+                  📝
+                </span>
+                <p
+                  className="text-xs leading-relaxed text-gray-700 line-clamp-2 flex-1"
+                  dir="rtl"
+                >
+                  {transcript}
+                </p>
+              </div>
             </div>
           )}
+
+          <div className="flex items-center justify-center gap-5 sm:gap-8">
+            {/* Mic button */}
+            <button
+              onClick={isListening ? stop : start}
+              className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-xl transition-all active:scale-95 sm:h-20 sm:w-20 ${
+                isListening
+                  ? "bg-gradient-to-br from-red-500 to-red-600 text-white recording-pulse ring-4 ring-red-200"
+                  : "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 hover:shadow-2xl"
+              }`}
+            >
+              {isListening ? (
+                <MicOff className="h-7 w-7 sm:h-9 sm:w-9 drop-shadow-sm" />
+              ) : (
+                <Mic className="h-7 w-7 sm:h-9 sm:w-9 drop-shadow-sm" />
+              )}
+            </button>
+
+            {/* Status & action button */}
+            <div className="flex flex-col gap-2.5 min-w-0 flex-1 max-w-xs">
+              <p className="text-xs font-semibold text-gray-700 sm:text-sm leading-tight">
+                {isListening
+                  ? "🎤 Listening… tap to stop"
+                  : transcript
+                    ? "✅ Recording complete"
+                    : "🎙️ Tap mic to start"}
+              </p>
+              {transcript && !isListening && (
+                <button
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing}
+                  className="rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:from-emerald-700 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                >
+                  {isAnalyzing ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Analysing…
+                    </span>
+                  ) : (
+                    "📋 See Review"
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
 
       {/* ── Review drawer ───────────────────────────── */}
       {showReview && analysisResults && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in"
             onClick={() => setShowReview(false)}
           />
-          <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl sm:max-w-lg">
+          <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl sm:max-w-lg animate-in slide-in-from-right duration-300">
             {/* drawer header */}
-            <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
-              <h2 className="text-lg font-bold">Review</h2>
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-sky-50 px-5 py-4 sm:px-6">
+              <h2 className="text-xl font-bold text-gray-900">📊 Review</h2>
               <button
                 onClick={() => setShowReview(false)}
-                className="rounded-lg p-1.5 transition hover:bg-gray-100"
+                className="rounded-lg p-2 transition-all hover:bg-white/80 hover:shadow-sm active:scale-95"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-gray-600" />
               </button>
             </div>
 
             {/* drawer body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 sm:p-6">
-              {/* score */}
-              <div className="rounded-xl bg-emerald-50 p-5 text-center">
-                <p className="text-5xl font-extrabold text-emerald-600 score-pop">
+            <div className="flex-1 overflow-y-auto p-5 space-y-6 sm:p-6">
+              {/* score card */}
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-100 via-emerald-50 to-white p-6 text-center shadow-lg border-2 border-emerald-200/50">
+                <div className="mb-2 inline-flex items-center justify-center h-12 w-12 rounded-full bg-emerald-200/50">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <p className="text-6xl font-black text-emerald-600 score-pop tracking-tight">
                   {(analysisResults.accuracy * 100).toFixed(0)}%
                 </p>
-                <p className="mt-1 text-sm font-medium text-emerald-800">
-                  Accuracy
+                <p className="mt-2 text-sm font-bold text-emerald-800 uppercase tracking-wide">
+                  Accuracy Score
                 </p>
               </div>
 
               {/* you said */}
-              <div>
-                <p className="mb-1.5 text-xs font-semibold text-gray-500">
-                  You said
-                </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">💬</span>
+                  <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    You said
+                  </p>
+                </div>
                 <div
-                  className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm leading-loose"
+                  className="rounded-xl border-2 border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 text-base leading-loose shadow-sm"
                   dir="rtl"
                   dangerouslySetInnerHTML={{ __html: highlightTranscript() }}
                 />
               </div>
 
               {/* expected */}
-              <div>
-                <p className="mb-1.5 text-xs font-semibold text-gray-500">
-                  Expected
-                </p>
-                <div className="mb-1 flex items-center gap-1.5 text-xs text-amber-700">
-                  <span className="inline-block h-3 w-5 rounded-sm border-b-2 border-amber-500 bg-amber-100" />
-                  Underlined words were omitted or mispronounced
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📖</span>
+                  <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Expected
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg bg-amber-100/50 px-3 py-2 text-xs font-medium text-amber-800">
+                  <span className="inline-block h-3 w-6 rounded-sm border-b-2 border-amber-500 bg-amber-200/80" />
+                  <span>Underlined = omitted or mispronounced</span>
                 </div>
                 <div
-                  className="quran-page rounded-lg border border-amber-200 bg-amber-50 p-3 !text-base !leading-loose"
+                  className="quran-page rounded-xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 to-white p-4 !text-base !leading-loose shadow-sm"
                   dir="rtl"
                   dangerouslySetInnerHTML={{ __html: highlightExpected() }}
                 />
@@ -407,29 +455,37 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
 
               {/* errors */}
               {analysisResults.errors?.length > 0 ? (
-                <div>
-                  <p className="mb-2 text-xs font-semibold text-red-700">
-                    Issues ({analysisResults.errors.length})
-                  </p>
-                  <div className="space-y-2">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚠️</span>
+                    <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                      Issues ({analysisResults.errors.length})
+                    </p>
+                  </div>
+                  <div className="space-y-2.5">
                     {analysisResults.errors.map((e: any, i: number) => (
                       <div
                         key={i}
-                        className="rounded-lg border-l-4 border-red-400 bg-red-50 p-3 text-sm"
+                        className="rounded-xl border-l-4 border-red-400 bg-gradient-to-r from-red-50 to-white p-4 shadow-sm"
                       >
-                        <p className="font-semibold capitalize text-red-900">
+                        <p className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-red-100 px-2 py-1 text-xs font-bold uppercase text-red-900">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                           {e.type}
                         </p>
                         {e.expected && (
-                          <p className="text-red-800">
-                            <span className="font-medium">Expected:</span>{" "}
-                            {e.expected}
+                          <p className="mb-1 text-sm text-red-900">
+                            <span className="font-bold">Expected:</span>{" "}
+                            <span className="font-semibold" dir="rtl">
+                              {e.expected}
+                            </span>
                           </p>
                         )}
                         {e.actual && (
-                          <p className="text-red-800">
-                            <span className="font-medium">You said:</span>{" "}
-                            {e.actual}
+                          <p className="text-sm text-red-900">
+                            <span className="font-bold">You said:</span>{" "}
+                            <span className="font-semibold" dir="rtl">
+                              {e.actual}
+                            </span>
                           </p>
                         )}
                       </div>
@@ -437,17 +493,22 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-lg bg-emerald-50 p-5 text-center">
-                  <p className="text-3xl">✅</p>
-                  <p className="mt-1 font-semibold text-emerald-800">
+                <div className="rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 p-8 text-center shadow-lg border-2 border-emerald-200/50">
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-200/50">
+                    <span className="text-4xl">✅</span>
+                  </div>
+                  <p className="text-xl font-bold text-emerald-900">
                     Perfect recitation!
+                  </p>
+                  <p className="mt-1 text-sm text-emerald-700">
+                    No errors detected. Keep up the excellent work!
                   </p>
                 </div>
               )}
             </div>
 
             {/* drawer footer */}
-            <div className="flex gap-2 border-t p-4 sm:p-6">
+            <div className="flex gap-3 border-t border-gray-200 bg-gray-50/80 p-5 sm:p-6">
               <button
                 onClick={() => {
                   setShowReview(false);
@@ -455,15 +516,15 @@ export default function FullSurahRecitation({ surahNumber, onBack }: Props) {
                   setTranscript("");
                   setHighlightedAyahs({});
                 }}
-                className="flex-1 rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                className="flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg hover:from-emerald-700 hover:to-emerald-600 active:scale-95"
               >
-                Try Again
+                🔄 Try Again
               </button>
               <button
                 onClick={onBack}
-                className="flex-1 rounded-lg bg-gray-100 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
+                className="flex-1 rounded-xl bg-white border-2 border-gray-200 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300 hover:shadow-md active:scale-95"
               >
-                Back
+                ← Back
               </button>
             </div>
           </aside>
